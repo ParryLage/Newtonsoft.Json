@@ -1334,8 +1334,39 @@ namespace Newtonsoft.Json.Converters
                         if (!ValueAttributes(node.Attributes) && node.ChildNodes.Count == 1
                             && node.ChildNodes[0].NodeType == XmlNodeType.Text)
                         {
-                            // write elements with a single text child as a name value pair
-                            writer.WriteValue(node.ChildNodes[0].Value);
+                            // Handles casting/parsing text child values according to XmlSchema if possible
+                            if (node.WrappedNode is XmlNode xmlNode
+                                && node.ChildNodes[0].Value != null
+                                && xmlNode.SchemaInfo.SchemaType != null
+                                && xmlNode.SchemaInfo.Validity == System.Xml.Schema.XmlSchemaValidity.Valid)
+                            {
+                                switch (xmlNode.SchemaInfo.SchemaType.TypeCode)
+                                {
+                                    case System.Xml.Schema.XmlTypeCode.Boolean:
+                                        writer.WriteValue(bool.Parse(node.ChildNodes[0].Value));
+                                        break;
+                                    case System.Xml.Schema.XmlTypeCode.Double:
+                                    case System.Xml.Schema.XmlTypeCode.Float:
+                                    case System.Xml.Schema.XmlTypeCode.Decimal:
+                                        writer.WriteValue(double.Parse(node.ChildNodes[0].Value, CultureInfo.InvariantCulture));
+                                        break;
+                                    case System.Xml.Schema.XmlTypeCode.PositiveInteger:
+                                    case System.Xml.Schema.XmlTypeCode.NonPositiveInteger:
+                                    case System.Xml.Schema.XmlTypeCode.NonNegativeInteger:
+                                    case System.Xml.Schema.XmlTypeCode.Integer:
+                                    case System.Xml.Schema.XmlTypeCode.Int:
+                                        writer.WriteValue(int.Parse(node.ChildNodes[0].Value, CultureInfo.InvariantCulture));
+                                        break;
+                                    default:
+                                        writer.WriteValue(node.ChildNodes[0].Value);
+                                        break;
+                                }
+                            }
+                            else
+                            {
+                                // write elements with a single text child as a name value pair
+                                writer.WriteValue(node.ChildNodes[0].Value);
+                            }
                         }
                         else if (node.ChildNodes.Count == 0 && node.Attributes.Count == 0)
                         {
