@@ -1334,6 +1334,7 @@ namespace Newtonsoft.Json.Converters
                         if (!ValueAttributes(node.Attributes) && node.ChildNodes.Count == 1
                             && node.ChildNodes[0].NodeType == XmlNodeType.Text)
                         {
+#if HAVE_XML_SCHEMA
                             // Handles casting/parsing text child values according to XmlSchema if possible
                             if (node.WrappedNode is XmlNode xmlNode
                                 && node.ChildNodes[0].Value != null
@@ -1367,6 +1368,10 @@ namespace Newtonsoft.Json.Converters
                                 // write elements with a single text child as a name value pair
                                 writer.WriteValue(node.ChildNodes[0].Value);
                             }
+#else
+                            // write elements with a single text child as a name value pair
+                            writer.WriteValue(node.ChildNodes[0].Value);
+#endif
                         }
                         else if (node.ChildNodes.Count == 0 && node.Attributes.Count == 0)
                         {
@@ -1500,7 +1505,7 @@ namespace Newtonsoft.Json.Converters
         }
 #endregion
 
-        #region Reading
+#region Reading
         /// <summary>
         /// Reads the JSON representation of the object.
         /// </summary>
