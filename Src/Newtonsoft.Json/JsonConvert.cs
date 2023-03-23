@@ -892,6 +892,19 @@ namespace Newtonsoft.Json
         /// Serializes the <see cref="XmlNode"/> to a JSON string using formatting.
         /// </summary>
         /// <param name="node">The node to serialize.</param>
+        /// <param name="omitXmlNamespacePrefixes">Omits writing the XML-Namespaceprefixes.</param>
+        /// <returns>A JSON string of the <see cref="XmlNode"/>.</returns>
+        public static string SerializeXmlNode(XmlNode? node, bool omitXmlNamespacePrefixes)
+        {
+            XmlNodeConverter converter = new XmlNodeConverter { OmitXmlNamespacePrefixes = omitXmlNamespacePrefixes };
+
+            return SerializeObject(node, Formatting.None, converter);
+        }
+
+        /// <summary>
+        /// Serializes the <see cref="XmlNode"/> to a JSON string using formatting.
+        /// </summary>
+        /// <param name="node">The node to serialize.</param>
         /// <param name="formatting">Indicates how the output should be formatted.</param>
         /// <returns>A JSON string of the <see cref="XmlNode"/>.</returns>
         public static string SerializeXmlNode(XmlNode? node, Formatting formatting)

@@ -979,6 +979,12 @@ namespace Newtonsoft.Json.Converters
         /// <value><c>true</c> if special characters are encoded; otherwise, <c>false</c>.</value>
         public bool EncodeSpecialCharacters { get; set; }
 
+        /// <summary>
+        /// Gets or sets a value indicating whether to write XML-Namespaceprefixes.
+        /// </summary>
+        /// <value><c>true</c> if the XML-Namespaceprefixes are omitted; otherwise, <c>false</c>.</value>
+        public bool OmitXmlNamespacePrefixes { get; set; }
+
         #region Writing
         /// <summary>
         /// Writes the JSON representation of the object.
@@ -1068,7 +1074,7 @@ namespace Newtonsoft.Json.Converters
 
         private string ResolveFullName(IXmlNode node, XmlNamespaceManager manager)
         {
-            string? prefix = (node.NamespaceUri == null || (node.LocalName == "xmlns" && node.NamespaceUri == "http://www.w3.org/2000/xmlns/"))
+            string? prefix = (OmitXmlNamespacePrefixes || node.NamespaceUri == null || (node.LocalName == "xmlns" && node.NamespaceUri == "http://www.w3.org/2000/xmlns/"))
                 ? null
                 : manager.LookupPrefix(node.NamespaceUri);
 
