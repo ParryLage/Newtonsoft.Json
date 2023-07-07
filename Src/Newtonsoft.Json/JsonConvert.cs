@@ -893,10 +893,11 @@ namespace Newtonsoft.Json
         /// </summary>
         /// <param name="node">The node to serialize.</param>
         /// <param name="omitXmlNamespacePrefixes">Omits writing the XML-Namespaceprefixes.</param>
+        /// <param name="omitXmlAttributes">Omits writing XML-Attributes</param>
         /// <returns>A JSON string of the <see cref="XmlNode"/>.</returns>
-        public static string SerializeXmlNode(XmlNode? node, bool omitXmlNamespacePrefixes)
+        public static string SerializeXmlNode(XmlNode? node, bool omitXmlNamespacePrefixes, bool omitXmlAttributes)
         {
-            XmlNodeConverter converter = new XmlNodeConverter { OmitXmlNamespacePrefixes = omitXmlNamespacePrefixes };
+            XmlNodeConverter converter = new XmlNodeConverter { OmitXmlNamespacePrefixes = omitXmlNamespacePrefixes, OmitXmlAttributes = omitXmlAttributes };
 
             return SerializeObject(node, Formatting.None, converter);
         }

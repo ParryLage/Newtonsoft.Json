@@ -985,6 +985,11 @@ namespace Newtonsoft.Json.Converters
         /// <value><c>true</c> if the XML-Namespaceprefixes are omitted; otherwise, <c>false</c>.</value>
         public bool OmitXmlNamespacePrefixes { get; set; }
 
+        /// <summary>
+        /// Gets or set a value indicating whether tro write XML-Attributes
+        /// </summary>
+        public bool OmitXmlAttributes { get; set; }
+
         #region Writing
         /// <summary>
         /// Writes the JSON representation of the object.
@@ -1428,6 +1433,12 @@ namespace Newtonsoft.Json.Converters
                         return;
                     }
 
+                    // Filter out xmlns Attributes
+                    if (node.NodeType == XmlNodeType.Attribute && OmitXmlAttributes)
+                    {
+                        return;
+                    }
+
                     if (node.NamespaceUri == JsonNamespaceUri)
                     {
                         if (node.LocalName == "Array")
@@ -1436,7 +1447,7 @@ namespace Newtonsoft.Json.Converters
                         }
                     }
 
-                    if (writePropertyName)
+                    if (writePropertyName && !OmitXmlAttributes)
                     {
                         writer.WritePropertyName(GetPropertyName(node, manager));
                     }
@@ -2214,6 +2225,12 @@ namespace Newtonsoft.Json.Converters
             foreach (IXmlNode xmlNode in c)
             {
                 if (xmlNode.NamespaceUri == JsonNamespaceUri)
+                {
+                    continue;
+                }
+
+                // Exclude xmlns Attributes because they shouldn't be serialized and shouldn't cause complex type serialization
+                if (xmlNode.NodeType == XmlNodeType.Attribute && OmitXmlAttributes)
                 {
                     continue;
                 }
