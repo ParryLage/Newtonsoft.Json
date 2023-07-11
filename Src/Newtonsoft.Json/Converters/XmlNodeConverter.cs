@@ -1384,7 +1384,7 @@ namespace Newtonsoft.Json.Converters
                             writer.WriteValue(node.ChildNodes[0].Value);
 #endif
                         }
-                        else if (node.ChildNodes.Count == 0 && node.Attributes.Count == 0)
+                        else if (node.ChildNodes.Count == 0 && (node.Attributes.Count == 0 || node.Attributes[0].LocalName == "nil"))
                         {
                             IXmlElement element = (IXmlElement)node;
 
