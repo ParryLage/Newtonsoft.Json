@@ -990,6 +990,12 @@ namespace Newtonsoft.Json.Converters
         /// </summary>
         public bool OmitXmlAttributes { get; set; }
 
+        /// <summary>
+        /// Gets or sets a value indicating whether to write XML-Comments.
+        /// </summary>
+        /// <value><c>true</c> if the XML-Comments are omitted; otherwise; <c>false</c>.</value>
+        public bool OmitXmlComments { get; set; }
+
         #region Writing
         /// <summary>
         /// Writes the JSON representation of the object.
@@ -1256,50 +1262,82 @@ namespace Newtonsoft.Json.Converters
 
         private void WriteGroupedNodes(JsonWriter writer, XmlNamespaceManager manager, bool writePropertyName, List<IXmlNode> groupedNodes, string elementNames)
         {
-            bool writeArray = groupedNodes.Count != 1 || IsArray(groupedNodes[0]);
-
-            if (!writeArray)
+            if (OmitXmlComments)
             {
-                SerializeNode(writer, groupedNodes[0], manager, writePropertyName);
+                List<IXmlNode> commentNodes = new List<IXmlNode>();
+                foreach (var node in groupedNodes)
+                {
+                    if (node.NodeType == XmlNodeType.Comment)
+                    {
+                        commentNodes.Add(node);
+                    }
+                }
+
+                foreach (var commentNode in commentNodes)
+                {
+                    groupedNodes.Remove(commentNode);
+                }
             }
-            else
+
+            if (groupedNodes.Count > 0)
             {
-                if (writePropertyName)
+                bool writeArray = groupedNodes.Count != 1 || IsArray(groupedNodes[0]);
+
+                if (!writeArray)
                 {
-                    writer.WritePropertyName(elementNames);
+                    SerializeNode(writer, groupedNodes[0], manager, writePropertyName);
                 }
-
-                writer.WriteStartArray();
-
-                for (int i = 0; i < groupedNodes.Count; i++)
+                else
                 {
-                    SerializeNode(writer, groupedNodes[i], manager, false);
-                }
+                    if (writePropertyName)
+                    {
+                        writer.WritePropertyName(elementNames);
+                    }
 
-                writer.WriteEndArray();
+                    writer.WriteStartArray();
+
+                    for (int i = 0; i < groupedNodes.Count; i++)
+                    {
+                        SerializeNode(writer, groupedNodes[i], manager, false);
+                    }
+
+                    writer.WriteEndArray();
+                }
             }
         }
 
         private void WriteGroupedNodes(JsonWriter writer, XmlNamespaceManager manager, bool writePropertyName, IXmlNode node, string elementNames)
         {
-            bool writeArray = IsArray(node);
-
-            if (!writeArray)
+            bool canWrite = true;
+            if (OmitXmlComments)
             {
-                SerializeNode(writer, node, manager, writePropertyName);
-            }
-            else
-            {
-                if (writePropertyName)
+                if (node.NodeType == XmlNodeType.Comment)
                 {
-                    writer.WritePropertyName(elementNames);
+                    canWrite = false;
                 }
+            }
 
-                writer.WriteStartArray();
+            if (canWrite)
+            {
+                bool writeArray = IsArray(node);
 
-                SerializeNode(writer, node, manager, false);
+                if (!writeArray)
+                {
+                    SerializeNode(writer, node, manager, writePropertyName);
+                }
+                else
+                {
+                    if (writePropertyName)
+                    {
+                        writer.WritePropertyName(elementNames);
+                    }
 
-                writer.WriteEndArray();
+                    writer.WriteStartArray();
+
+                    SerializeNode(writer, node, manager, false);
+
+                    writer.WriteEndArray();
+                }
             }
         }
 
@@ -1343,7 +1381,7 @@ namespace Newtonsoft.Json.Converters
                         }
 
                         if (!ValueAttributes(node.Attributes) && node.ChildNodes.Count == 1
-                            && node.ChildNodes[0].NodeType == XmlNodeType.Text)
+                            && (node.ChildNodes[0].NodeType == XmlNodeType.Text || node.ChildNodes[0].NodeType == XmlNodeType.Comment))
                         {
 #if HAVE_XML_SCHEMA
                             // Handles casting/parsing text child values according to XmlSchema if possible
@@ -1376,8 +1414,15 @@ namespace Newtonsoft.Json.Converters
                             }
                             else
                             {
-                                // write elements with a single text child as a name value pair
-                                writer.WriteValue(node.ChildNodes[0].Value);
+                                if (OmitXmlComments && node.ChildNodes[0].NodeType == XmlNodeType.Comment)
+                                {
+                                    writer.WriteNull();
+                                }
+                                else 
+                                {
+                                    // write elements with a single text child as a name value pair
+                                    writer.WriteValue(node.ChildNodes[0].Value);
+                                }
                             }
 #else
                             // write elements with a single text child as a name value pair
@@ -1419,7 +1464,10 @@ namespace Newtonsoft.Json.Converters
                 case XmlNodeType.Comment:
                     if (writePropertyName)
                     {
-                        writer.WriteComment(node.Value);
+                        if (!OmitXmlComments)
+                        {
+                            writer.WriteComment(node.Value);
+                        }
                     }
                     break;
                 case XmlNodeType.Attribute:
