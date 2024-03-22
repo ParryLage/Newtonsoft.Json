@@ -112,8 +112,8 @@ namespace Newtonsoft.Json.Tests
             JsonReaderException exception = new JsonReaderException("message!");
             using (var memoryStream = new MemoryStream())
             {
-                var binaryFormatter = new BinaryFormatter();
 #pragma warning disable SYSLIB0011 // Type or member is obsolete
+                var binaryFormatter = new BinaryFormatter();
                 binaryFormatter.Serialize(memoryStream, exception);
 #pragma warning restore SYSLIB0011 // Type or member is obsolete
             }
